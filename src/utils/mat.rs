@@ -14,6 +14,22 @@ struct MatrixImpl {
 }
 
 impl MatrixImpl {
+    pub unsafe fn resize_row(&mut self, x: usize) {
+        let layout =
+            Layout::from_size_align_unchecked(self.row * self.real_col * size_of::<f32>(), 32);
+        let np = alloc::realloc(
+            self.ptr as *mut u8,
+            layout,
+            x * self.real_col * size_of::<f32>(),
+        ) as *mut f32;
+        if np.is_null() {
+            let layout =
+                Layout::from_size_align_unchecked(x * self.real_col * size_of::<f32>(), 32);
+            handle_alloc_error(layout);
+        }
+        self.ptr = np;
+        self.row = x;
+    }
     pub unsafe fn normal_init(&self) {
         let k = 1.0 / (2.0 * PI).sqrt();
         (0..self.row).into_par_iter().for_each(|index| {
@@ -287,6 +303,9 @@ pub struct Matrix {
 }
 
 impl Matrix {
+    pub unsafe fn resize_row(&mut self, x: usize) {
+        self.inner.as_mut().unwrap().resize_row(x);
+    }
     pub unsafe fn new(n: usize, m: usize) -> Self {
         Self {
             inner: Some(Box::new(MatrixImpl::new(n, m))),

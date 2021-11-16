@@ -9,4 +9,5 @@ pub mod mnist;
 pub mod network;
 pub mod relu;
 
+pub mod conv3x3;
 pub mod misc;
