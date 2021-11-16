@@ -35,7 +35,7 @@ impl nn_trait::Layer for LinearLayer {
         unsafe {
             let now = input.mul(&self.weight);
             now.add_with_vector(&self.bias, true);
-            self.last_input.move_copy(input);
+            self.last_input = input;
             now
         }
     }
@@ -46,17 +46,17 @@ impl nn_trait::Layer for LinearLayer {
             for j in (0..w).step_by(32 / size_of::<f32>()) {
                 let mut sum = x86_64::_mm256_set1_ps(0.0);
                 for i in 0..h {
-                    let val = x86_64::_mm256_load_ps(dLoss.row(i as isize).add(j));
+                    let val = x86_64::_mm256_load_ps(dLoss.row_at(i as isize).add(j));
                     sum = x86_64::_mm256_add_ps(sum, val);
                 }
-                x86_64::_mm256_store_ps(self.d_bias.row(0).add(j), sum);
+                x86_64::_mm256_store_ps(self.d_bias.row_at(0).add(j), sum);
             }
 
             let xt = self.last_input.T();
 
             let xt = xt.mul(&dLoss);
 
-            self.d_weight.move_copy(xt);
+            self.d_weight = xt;
 
             let wt = self.weight.T();
 

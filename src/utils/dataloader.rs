@@ -44,14 +44,14 @@ where
             })
             .for_each(|(idx, (fetched_image, fetched_gt))| {
                 let fetched_image = fetched_image.as_ptr();
-                let to = image.row(idx as isize);
-                for k in (0..image.real_col()).step_by(32 / size_of::<f32>()) {
+                let to = image.row_at(idx as isize);
+                for k in (0..image.number_of_real_col()).step_by(32 / size_of::<f32>()) {
                     let source = fetched_image.add(k);
                     let destination = to.add(k);
                     let val = x86_64::_mm256_load_ps(source);
                     x86_64::_mm256_store_ps(destination, val);
                 }
-                gt.set(idx as isize, fetched_gt as isize, 1.0);
+                *gt.row_at(idx as isize).add(fetched_gt as usize) = 1.0;
             });
 
         (image, gt)

@@ -24,8 +24,8 @@ impl nn_trait::Layer for ReluLayer {
             let (h, _) = input.shape();
             let cmp = x86_64::_mm256_set1_ps(0.0);
             (0..h).into_par_iter().for_each(|idx| {
-                let src = input.row(idx as isize);
-                for i in (0..input.real_col()).step_by(256 / size_of::<f32>()) {
+                let src = input.row_at(idx as isize);
+                for i in (0..input.number_of_real_col()).step_by(256 / size_of::<f32>()) {
                     let val = x86_64::_mm256_max_ps(x86_64::_mm256_load_ps(src.add(i)), cmp);
                     x86_64::_mm256_store_ps(src.add(i), val);
                 }
@@ -38,9 +38,9 @@ impl nn_trait::Layer for ReluLayer {
             let (h, _) = dLoss.shape();
             let cmp = x86_64::_mm256_set1_ps(0.0);
             (0..h).into_par_iter().for_each(|idx| {
-                let src = self.last_input.row(idx as isize);
-                let dst = dLoss.row(idx as isize);
-                for i in (0..dLoss.real_col()).step_by(256 / size_of::<f32>()) {
+                let src = self.last_input.row_at(idx as isize);
+                let dst = dLoss.row_at(idx as isize);
+                for i in (0..dLoss.number_of_real_col()).step_by(256 / size_of::<f32>()) {
                     let val = x86_64::_mm256_load_ps(src.add(i));
                     let mask = std::arch::x86_64::_mm256_cmp_ps::<_CMP_LE_OQ>(val, cmp);
 

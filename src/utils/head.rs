@@ -3,7 +3,7 @@ use crate::utils::nn_trait;
 use rayon::prelude::*;
 
 pub struct SoftMaxCrossEntropy {
-    grad: Matrix,
+    pub grad: Matrix,
 }
 
 impl SoftMaxCrossEntropy {
@@ -22,9 +22,9 @@ impl nn_trait::Head for SoftMaxCrossEntropy {
             self.grad = Matrix::new(h, w);
 
             (0..h).into_par_iter().for_each(|idx| {
-                let src_row = input.row(idx as isize);
-                let grad_row = self.grad.row(idx as isize);
-                let target_row = target.row(idx as isize);
+                let src_row = input.row_at(idx as isize);
+                let grad_row = self.grad.row_at(idx as isize);
+                let target_row = target.row_at(idx as isize);
 
                 let max_val =
                     (1..w)
@@ -54,7 +54,7 @@ impl nn_trait::Head for SoftMaxCrossEntropy {
                     }
                     loss -= target * pred.ln();
                 }
-                *ret.row(idx as isize).offset(0) = loss;
+                *ret.row_at(idx as isize).offset(0) = loss;
             });
             ret
         }
@@ -69,7 +69,7 @@ impl nn_trait::Head for SoftMaxCrossEntropy {
             let mut ret = vec![0; h];
             let ptr = ret.as_mut_ptr();
             (0..h).into_iter().for_each(|idx| {
-                let src_row = input.row(idx as isize);
+                let src_row = input.row_at(idx as isize);
                 let arg_max = (1..w)
                     .map(|i| (i, *src_row.add(i)))
                     .fold((0, *src_row), |a, b| if a.1 < b.1 { b } else { a })

@@ -38,13 +38,13 @@ pub fn random_shuffle(x: &mut Vec<usize>, mut seed: u32) {
     let len = x.len();
     for i in 0..(len - 1) {
         let left = (len - i) as u32;
-        let o = rand_next(&mut seed) % left;
-        let j = i + o as usize;
-        if o != 0 {
-            let l = *x.get(i).unwrap();
-            let r = *x.get(j).unwrap();
-            *x.get_mut(i).unwrap() = r;
-            *x.get_mut(j).unwrap() = l;
+        let offset = rand_next(&mut seed) % left;
+        if offset != 0 {
+            let j = i + offset as usize;
+            let lhs = *x.get(i).unwrap();
+            let rhs = *x.get(j).unwrap();
+            *x.get_mut(i).unwrap() = rhs;
+            *x.get_mut(j).unwrap() = lhs;
         }
     }
 }

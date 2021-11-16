@@ -36,7 +36,7 @@ impl MnistData {
                 .unwrap()
                 .to_luma8();
             let buf = img.as_raw();
-            let row = image.row(idx as isize);
+            let row = image.row_at(idx as isize);
             for i in 0..buf.len() {
                 *row.add(i) = buf.get(i as usize).unwrap().to_owned() as f32 / 255.0;
             }
@@ -79,7 +79,7 @@ impl DataSet for MnistData {
         if idx >= self.len as isize || idx < 0 {
             panic!("fetch item with incorrect idx");
         }
-        let image = self.image.row(idx);
+        let image = self.image.row_at(idx);
         let image = std::slice::from_raw_parts(image, self.dim());
         let gt = self.gt.get(idx as usize).unwrap().to_owned();
 

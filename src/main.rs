@@ -17,6 +17,7 @@ fn main() {
         let train_dataset = MnistData::new(mnist_train_path, -1);
         let mnist_test_path = r"C:\Users\Rinne\Desktop\mnist\test";
         let test_dataset = MnistData::new(mnist_test_path, -1);
+
         let layers: Vec<Box<dyn Layer>> = vec![
             Box::new(LinearLayer::new(train_dataset.dim(), 512)),
             Box::new(ReluLayer::new()),
@@ -50,7 +51,6 @@ fn main() {
                     println!("epoch {}, iter {}, loss {}", i, iter, sum / h as f32);
                 }
                 network.backward(loss);
-
                 network.update_parameters(rate, decay);
             }
             println!("testing");
@@ -62,7 +62,7 @@ fn main() {
                 let sz = result.len();
                 (0..sz).into_iter().for_each(|idx| {
                     let res = *result.get(idx).unwrap();
-                    if (*gt.row(idx as isize).add(res) - 1.0).abs() < 1e-5 {
+                    if (*gt.row_at(idx as isize).add(res) - 1.0).abs() < 1e-5 {
                         ok += 1;
                     }
                 });

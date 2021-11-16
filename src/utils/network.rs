@@ -3,12 +3,15 @@ use crate::utils::nn_trait::{Head, Layer};
 
 pub struct Network {
     layers: Vec<Box<dyn Layer>>,
-    loss_fn: Box<dyn Head>,
+    pub head: Box<dyn Head>,
 }
 
 impl Network {
     pub fn new(layers: Vec<Box<dyn Layer>>, loss_fn: Box<dyn Head>) -> Self {
-        Self { layers, loss_fn }
+        Self {
+            layers,
+            head: loss_fn,
+        }
     }
     pub fn forward(&mut self, mut x: Matrix) -> Matrix {
         for layer in self.layers.iter_mut() {
@@ -18,15 +21,15 @@ impl Network {
     }
 
     pub unsafe fn calc_loss(&mut self, pred: Matrix, target: Matrix) -> Matrix {
-        self.loss_fn.forward(pred, target)
+        self.head.forward(pred, target)
     }
 
     pub unsafe fn get_result(&self, pred: Matrix) -> Vec<usize> {
-        self.loss_fn.eval_forward(pred)
+        self.head.eval_forward(pred)
     }
 
     pub fn backward(&mut self, x: Matrix) {
-        let mut x = self.loss_fn.backward(x);
+        let mut x = self.head.backward(x);
         for layer in self.layers.iter_mut().rev() {
             x = layer.backward(x);
         }
