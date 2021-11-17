@@ -1,17 +1,15 @@
 use crate::utils::mat::Matrix;
-use crate::utils::nn_trait::{Head, Layer};
+use crate::utils::nn_trait::{Head, Layer, Optimizer};
 
 pub struct Network {
     layers: Vec<Box<dyn Layer>>,
     pub head: Box<dyn Head>,
+    pub opt: Box<dyn Optimizer>,
 }
 
 impl Network {
-    pub fn new(layers: Vec<Box<dyn Layer>>, loss_fn: Box<dyn Head>) -> Self {
-        Self {
-            layers,
-            head: loss_fn,
-        }
+    pub fn new(layers: Vec<Box<dyn Layer>>, head: Box<dyn Head>, opt: Box<dyn Optimizer>) -> Self {
+        Self { layers, head, opt }
     }
     pub fn forward(&mut self, mut x: Matrix) -> Matrix {
         for layer in self.layers.iter_mut() {
@@ -34,9 +32,14 @@ impl Network {
             x = layer.backward(x);
         }
     }
-    pub fn update_parameters(&mut self, rate: f32, momentum: f32, decay: f32) {
+    pub fn update_parameters(&mut self) {
         for layer in self.layers.iter_mut() {
-            layer.update_parameters(rate, momentum, decay);
+            if layer.trainable() {
+                let (weight, d_weight, v_weight, bias, d_bias, v_bias) =
+                    layer.parameters().unwrap();
+                self.opt
+                    .step(weight, d_weight, v_weight, bias, d_bias, v_bias);
+            }
         }
     }
 }

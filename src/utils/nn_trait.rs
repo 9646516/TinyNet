@@ -3,7 +3,19 @@ use crate::utils::mat::Matrix;
 pub trait Layer {
     fn forward(&mut self, input: Matrix) -> Matrix;
     fn backward(&mut self, dLoss: Matrix) -> Matrix;
-    fn update_parameters(&mut self, rate: f32, momentum: f32, decay: f32);
+    fn trainable(&self) -> bool;
+    fn parameters(
+        &mut self,
+    ) -> Option<(
+        &mut Matrix,
+        &mut Matrix,
+        &mut Matrix,
+        &mut Matrix,
+        &mut Matrix,
+        &mut Matrix,
+    )> {
+        None
+    }
 }
 
 pub trait Head {
@@ -17,4 +29,16 @@ pub trait DataSet {
     fn len(&self) -> usize;
     fn is_empty(&self) -> bool;
     unsafe fn fetch_item(&self, idx: isize) -> (&[f32], u8);
+}
+
+pub trait Optimizer {
+    fn step(
+        &self,
+        weight: &mut Matrix,
+        d_weight: &mut Matrix,
+        v_weight: &mut Matrix,
+        bias: &mut Matrix,
+        d_bias: &mut Matrix,
+        v_bias: &mut Matrix,
+    );
 }

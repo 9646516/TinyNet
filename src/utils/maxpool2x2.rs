@@ -154,6 +154,7 @@ impl nn_trait::Layer for MaxPool2x2 {
             ret
         }
     }
-
-    fn update_parameters(&mut self, _: f32, _: f32, _: f32) {}
+    fn trainable(&self) -> bool {
+        false
+    }
 }

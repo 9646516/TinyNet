@@ -67,29 +67,27 @@ impl nn_trait::Layer for LinearLayer {
             dLoss.mul(&wt)
         }
     }
-    fn update_parameters(&mut self, rate: f32, momentum: f32, decay: f32) {
-        unsafe {
-            let weight_decay = self.weight.mul_with_numeric(decay, false).unwrap();
-            weight_decay.add(&self.d_weight, true);
-            let weight_go = weight_decay.mul_with_numeric(-rate, false).unwrap();
-            if self.v_weight.is_null() {
-                self.v_weight = weight_go;
-            } else {
-                self.v_weight.mul_with_numeric(momentum, true);
-                self.v_weight.add(&weight_go, true);
-            }
-            self.v_weight.clamp(-100.0, 100.0);
-            self.weight.add(&self.v_weight, true);
+    fn trainable(&self) -> bool {
+        true
+    }
 
-            let bias_go = self.d_bias.mul_with_numeric(-rate, false).unwrap();
-            if self.v_bias.is_null() {
-                self.v_bias = bias_go;
-            } else {
-                self.v_bias.mul_with_numeric(momentum, true);
-                self.v_bias.add(&bias_go, true);
-            }
-            self.v_bias.clamp(-100.0, 100.0);
-            self.bias.add(&self.v_bias, true);
-        }
+    fn parameters(
+        &mut self,
+    ) -> Option<(
+        &mut Matrix,
+        &mut Matrix,
+        &mut Matrix,
+        &mut Matrix,
+        &mut Matrix,
+        &mut Matrix,
+    )> {
+        Some((
+            &mut self.weight,
+            &mut self.d_weight,
+            &mut self.v_weight,
+            &mut self.bias,
+            &mut self.d_bias,
+            &mut self.v_bias,
+        ))
     }
 }

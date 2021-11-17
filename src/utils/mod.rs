@@ -12,3 +12,4 @@ pub mod relu;
 pub mod conv3x3;
 pub mod maxpool2x2;
 pub mod misc;
+pub mod optimizer;

@@ -9,6 +9,7 @@ use crate::utils::maxpool2x2::MaxPool2x2;
 use crate::utils::mnist::MnistData;
 use crate::utils::network::Network;
 use crate::utils::nn_trait::{DataSet, Layer};
+use crate::utils::optimizer::SGD;
 use crate::utils::relu::ReluLayer;
 
 pub mod utils;
@@ -29,13 +30,14 @@ fn main() {
             Box::new(ReluLayer::new()),
             Box::new(LinearLayer::new(128, 10)),
         ];
-        let loss_fn = Box::new(SoftMaxCrossEntropy::new());
-
-        let mut network = Network::new(layers, loss_fn);
+        let head = Box::new(SoftMaxCrossEntropy::new());
 
         let rate = 0.01f32;
         let momentum = 0.9f32;
         let decay = 0.0001f32;
+
+        let opt = Box::new(SGD::new(rate, momentum, decay));
+        let mut network = Network::new(layers, head, opt);
 
         for i in 0..1 {
             let mut iter = 0;
@@ -54,7 +56,7 @@ fn main() {
                     println!("epoch {}, iter {}, loss {}", i, iter, sum / h as f32);
                 }
                 network.backward(loss);
-                network.update_parameters(rate, momentum, decay);
+                network.update_parameters();
             }
             println!("testing");
             let dataloader = DataLoader::new(&test_dataset, 1024, 0);
