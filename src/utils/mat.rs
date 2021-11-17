@@ -127,6 +127,13 @@ impl MatrixImpl {
         self.ops_with_matrix(rhs, inplace, |a, b| x86_64::_mm256_add_ps(a, b), false)
     }
 
+    pub unsafe fn dot(&self, rhs: &MatrixImpl, inplace: bool) -> Option<MatrixImpl> {
+        if self.row != rhs.row || self.col != rhs.col {
+            panic!("call add with unmatched matrix shape");
+        }
+        self.ops_with_matrix(rhs, inplace, |a, b| x86_64::_mm256_mul_ps(a, b), false)
+    }
+
     unsafe fn ops_with_numeric<T>(&self, inplace: bool, rhs: f32, f: T) -> Option<MatrixImpl>
     where
         T: std::ops::Fn(x86_64::__m256, x86_64::__m256) -> x86_64::__m256 + std::marker::Sync,
@@ -377,6 +384,17 @@ impl Matrix {
     pub unsafe fn add(&self, rhs: &Matrix, inplace: bool) -> Option<Matrix> {
         let rhs = rhs.inner.as_ref().unwrap().as_ref();
         let ret = self.inner.as_ref().unwrap().add(rhs, inplace);
+        if inplace {
+            None
+        } else {
+            Some(Self {
+                inner: Some(Box::new(ret.unwrap())),
+            })
+        }
+    }
+    pub unsafe fn dot(&self, rhs: &Matrix, inplace: bool) -> Option<Matrix> {
+        let rhs = rhs.inner.as_ref().unwrap().as_ref();
+        let ret = self.inner.as_ref().unwrap().dot(rhs, inplace);
         if inplace {
             None
         } else {

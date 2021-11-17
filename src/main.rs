@@ -1,9 +1,11 @@
 #![allow(clippy::missing_safety_doc)]
 #![allow(non_snake_case)]
 
+use crate::utils::conv3x3::Conv3x3;
 use crate::utils::dataloader::DataLoader;
 use crate::utils::head::SoftMaxCrossEntropy;
 use crate::utils::linear::LinearLayer;
+use crate::utils::maxpool2x2::MaxPool2x2;
 use crate::utils::mnist::MnistData;
 use crate::utils::network::Network;
 use crate::utils::nn_trait::{DataSet, Layer};
@@ -19,22 +21,23 @@ fn main() {
         let test_dataset = MnistData::new(mnist_test_path, -1);
 
         let layers: Vec<Box<dyn Layer>> = vec![
-            Box::new(LinearLayer::new(train_dataset.dim(), 512)),
+            Box::new(Conv3x3::new(1, 4, 28, 28, 1, 1)),
             Box::new(ReluLayer::new()),
-            Box::new(LinearLayer::new(512, 128)),
+            Box::new(MaxPool2x2::new(4, 28, 28)),
+            Box::new(Conv3x3::new(4, 8, 14, 14, 1, 1)),
+            Box::new(LinearLayer::new(14 * 14 * 8, 128)),
             Box::new(ReluLayer::new()),
-            Box::new(LinearLayer::new(128, 32)),
-            Box::new(ReluLayer::new()),
-            Box::new(LinearLayer::new(32, 10)),
+            Box::new(LinearLayer::new(128, 10)),
         ];
         let loss_fn = Box::new(SoftMaxCrossEntropy::new());
 
         let mut network = Network::new(layers, loss_fn);
 
-        let rate = 0.001f32;
+        let rate = 0.01f32;
+        let momentum = 0.9f32;
         let decay = 0.0001f32;
 
-        for i in 0..1000 {
+        for i in 0..1 {
             let mut iter = 0;
             let dataloader = DataLoader::new(&train_dataset, 128, i << 10);
             for (image, gt) in dataloader {
@@ -51,7 +54,7 @@ fn main() {
                     println!("epoch {}, iter {}, loss {}", i, iter, sum / h as f32);
                 }
                 network.backward(loss);
-                network.update_parameters(rate, decay);
+                network.update_parameters(rate, momentum, decay);
             }
             println!("testing");
             let dataloader = DataLoader::new(&test_dataset, 1024, 0);
@@ -72,7 +75,7 @@ fn main() {
                 i,
                 ok,
                 test_dataset.len(),
-                ok as f32 / test_dataset.len() as f32
+                ok as f32 / test_dataset.len() as f32 * 100.0
             )
         }
     }

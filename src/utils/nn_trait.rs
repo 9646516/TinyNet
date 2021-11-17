@@ -3,7 +3,7 @@ use crate::utils::mat::Matrix;
 pub trait Layer {
     fn forward(&mut self, input: Matrix) -> Matrix;
     fn backward(&mut self, dLoss: Matrix) -> Matrix;
-    fn update_parameters(&mut self, rate: f32, decay: f32);
+    fn update_parameters(&mut self, rate: f32, momentum: f32, decay: f32);
 }
 
 pub trait Head {

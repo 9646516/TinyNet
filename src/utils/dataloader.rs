@@ -48,8 +48,8 @@ where
                 for k in (0..image.number_of_real_col()).step_by(32 / size_of::<f32>()) {
                     let source = fetched_image.add(k);
                     let destination = to.add(k);
-                    let val = x86_64::_mm256_load_ps(source);
-                    x86_64::_mm256_store_ps(destination, val);
+                    let val = x86_64::_mm256_loadu_ps(source);
+                    x86_64::_mm256_storeu_ps(destination, val);
                 }
                 *gt.row_at(idx as isize).add(fetched_gt as usize) = 1.0;
             });

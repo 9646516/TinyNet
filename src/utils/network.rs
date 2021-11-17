@@ -34,9 +34,9 @@ impl Network {
             x = layer.backward(x);
         }
     }
-    pub fn update_parameters(&mut self, rate: f32, decay: f32) {
+    pub fn update_parameters(&mut self, rate: f32, momentum: f32, decay: f32) {
         for layer in self.layers.iter_mut() {
-            layer.update_parameters(rate, decay);
+            layer.update_parameters(rate, momentum, decay);
         }
     }
 }

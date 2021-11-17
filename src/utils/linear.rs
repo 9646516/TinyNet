@@ -6,9 +6,11 @@ use std::mem::size_of;
 pub struct LinearLayer {
     last_input: Matrix,
     pub weight: Matrix,
-    d_weight: Matrix,
+    pub d_weight: Matrix,
+    pub v_weight: Matrix,
     pub bias: Matrix,
-    d_bias: Matrix,
+    pub d_bias: Matrix,
+    pub v_bias: Matrix,
 }
 
 impl LinearLayer {
@@ -26,6 +28,8 @@ impl LinearLayer {
             d_weight,
             bias,
             d_bias,
+            v_weight: Matrix::null(),
+            v_bias: Matrix::null(),
         }
     }
 }
@@ -63,17 +67,29 @@ impl nn_trait::Layer for LinearLayer {
             dLoss.mul(&wt)
         }
     }
-    fn update_parameters(&mut self, rate: f32, decay: f32) {
+    fn update_parameters(&mut self, rate: f32, momentum: f32, decay: f32) {
         unsafe {
             let weight_decay = self.weight.mul_with_numeric(decay, false).unwrap();
             weight_decay.add(&self.d_weight, true);
             let weight_go = weight_decay.mul_with_numeric(-rate, false).unwrap();
-            weight_go.clamp(-100.0, 100.0);
-            self.weight.add(&weight_go, true);
+            if self.v_weight.is_null() {
+                self.v_weight = weight_go;
+            } else {
+                self.v_weight.mul_with_numeric(momentum, true);
+                self.v_weight.add(&weight_go, true);
+            }
+            self.v_weight.clamp(-100.0, 100.0);
+            self.weight.add(&self.v_weight, true);
 
             let bias_go = self.d_bias.mul_with_numeric(-rate, false).unwrap();
-            bias_go.clamp(-100.0, 100.0);
-            self.bias.add(&bias_go, true);
+            if self.v_bias.is_null() {
+                self.v_bias = bias_go;
+            } else {
+                self.v_bias.mul_with_numeric(momentum, true);
+                self.v_bias.add(&bias_go, true);
+            }
+            self.v_bias.clamp(-100.0, 100.0);
+            self.bias.add(&self.v_bias, true);
         }
     }
 }
